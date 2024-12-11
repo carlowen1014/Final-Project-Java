@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Dashboard {
 
@@ -84,6 +86,17 @@ public class Dashboard {
         });
         panel.add(addExpenseButton);
 
+        // Reset Button
+        JButton resetButton = new JButton("Reset for New Month");
+        resetButton.addActionListener(e -> {
+            int confirmed = JOptionPane.showConfirmDialog(frame, "Are you sure you want to reset for the new month?", "Reset Confirmation", JOptionPane.YES_NO_OPTION);
+            if (confirmed == JOptionPane.YES_OPTION) {
+                budgetManager.resetMonthlyData();
+                JOptionPane.showMessageDialog(frame, "You have reset. You are now ready for your next month.");
+            }
+        });
+        panel.add(resetButton);
+
         // Report Section
         JTextArea reportArea = new JTextArea(15, 30);
         reportArea.setEditable(false);
@@ -93,9 +106,12 @@ public class Dashboard {
         JButton generateReportButton = new JButton("Generate Report");
         generateReportButton.addActionListener(e -> {
             StringBuilder report = new StringBuilder("--- Transaction Report ---\n");
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
             for (String transaction : budgetManager.getAllTransactions()) {
                 report.append(transaction).append("\n");
             }
+
             report.append("\nTotal Income: $").append(budgetManager.getTotalIncome());
             report.append("\nTotal Expenses: $").append(budgetManager.getTotalExpenses());
 

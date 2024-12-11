@@ -1,6 +1,7 @@
+import javax.swing.*;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class BudgetManager {
     private double savings = 0;
@@ -8,25 +9,48 @@ public class BudgetManager {
     private double totalExpenses = 0;
     private final List<String> transactions = new ArrayList<>();
     private final String filePath = "transactions.txt";
+    private final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public BudgetManager() {
         loadTransactions();
     }
 
     public void addTransaction(String transaction) {
-        transactions.add(transaction);
+        String timestamp = dateFormatter.format(new Date());
+        transactions.add(timestamp + " - " + transaction);
         saveTransactions();
     }
+
+    public void resetMonthlyData() {
+        transactions.clear();
+        income = 0;
+        totalExpenses = 0;
+        savings = 0;
+        saveTransactions();  // Optionally, save the empty state to file
+    }
+
 
     public List<String> getAllTransactions() {
         return transactions;
     }
 
     public double getTotalIncome() {
-        return income;
+        double totalIncome = 0;
+        for (String transaction : transactions) {
+            if (transaction.contains("Income:")) {
+                totalIncome += Double.parseDouble(transaction.split("\\$")[1].split(" ")[0]);
+            }
+        }
+        return totalIncome;
     }
 
     public double getTotalExpenses() {
+        double totalExpenses = 0;
+        for (String transaction : transactions) {
+            if (transaction.contains(": $") && !transaction.contains("Income:") && !transaction.contains("Savings:")) {
+                totalExpenses += Double.parseDouble(transaction.split("\\$")[1].split(" ")[0]);
+            }
+        }
         return totalExpenses;
     }
 
@@ -49,6 +73,15 @@ public class BudgetManager {
         return savings;
     }
 
+    // Reset method to clear all transactions and totals
+    public void reset() {
+        income = 0;
+        savings = 0;
+        totalExpenses = 0;
+        transactions.clear();
+        saveTransactions();  // Optionally save the empty state to file if desired
+    }
+
     private void saveTransactions() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             for (String transaction : transactions) {
@@ -66,13 +99,13 @@ public class BudgetManager {
             while ((line = reader.readLine()) != null) {
                 transactions.add(line);
 
-                // Parse income and expenses for totals
-                if (line.startsWith("Income:")) {
-                    income += Double.parseDouble(line.split("\\$")[1]);
-                } else if (line.startsWith("Savings:")) {
-                    savings += Double.parseDouble(line.split("\\$")[1]);
-                } else if (line.contains(": $")) {
-                    totalExpenses += Double.parseDouble(line.split("\\$")[1]);
+                // Parse income and expenses for totals dynamically
+                if (line.contains("Income:")) {
+                    income += Double.parseDouble(line.split("\\$")[1].split(" ")[0]);
+                } else if (line.contains("Savings:")) {
+                    savings += Double.parseDouble(line.split("\\$")[1].split(" ")[0]);
+                } else if (line.contains(": $") && !line.contains("Income:") && !line.contains("Savings:")) {
+                    totalExpenses += Double.parseDouble(line.split("\\$")[1].split(" ")[0]);
                 }
             }
         } catch (FileNotFoundException e) {
@@ -82,5 +115,3 @@ public class BudgetManager {
         }
     }
 }
-
-
