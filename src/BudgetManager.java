@@ -1,74 +1,86 @@
+import java.io.*;
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.List;
 
 public class BudgetManager {
     private double savings = 0;
     private double income = 0;
     private double totalExpenses = 0;
-    private final ArrayList<String> transactions = new ArrayList<>();
+    private final List<String> transactions = new ArrayList<>();
+    private final String filePath = "transactions.txt";
 
-    private final Scanner scanner = new Scanner(System.in);
-
-    public void manageBudget() {
-        System.out.println("Welcome to Budget Manager!");
-
-        // Enter Income
-        System.out.print("Enter your income: ");
-        income = getPositiveInput();
-        transactions.add("Income: $" + income);
-
-        // Enter Savings
-        System.out.print("Enter your savings: ");
-        savings = getPositiveInput();
-        transactions.add("Savings: $" + savings);
-
-        // Enter Current Expenses
-        System.out.print("Enter your current expenses: ");
-        double currentExpense = getPositiveInput();
-        totalExpenses += currentExpense;
-        transactions.add("Current Expenses: $" + currentExpense);
-
-        // Enter Future Expense
-        System.out.print("Enter a future expense: ");
-        double futureExpense = getPositiveInput();
-        if (futureExpense > savings) {
-            System.out.println("I would advise against this transaction.");
-        }
-        totalExpenses += futureExpense;
-        transactions.add("Future Expense: $" + futureExpense);
-
-        // Generate Report
-        generateReport();
+    public BudgetManager() {
+        loadTransactions();
     }
 
-    private double getPositiveInput() {
-        while (true) {
-            try {
-                double input = Double.parseDouble(scanner.nextLine());
-                if (input >= 0) {
-                    return input;
-                } else {
-                    System.out.print("Please enter a positive number: ");
-                }
-            } catch (NumberFormatException e) {
-                System.out.print("Invalid input. Please enter a number: ");
+    public void addTransaction(String transaction) {
+        transactions.add(transaction);
+        saveTransactions();
+    }
+
+    public List<String> getAllTransactions() {
+        return transactions;
+    }
+
+    public double getTotalIncome() {
+        return income;
+    }
+
+    public double getTotalExpenses() {
+        return totalExpenses;
+    }
+
+    public void setIncome(double income) {
+        this.income = income;
+        addTransaction("Income: $" + income);
+    }
+
+    public void setSavings(double savings) {
+        this.savings = savings;
+        addTransaction("Savings: $" + savings);
+    }
+
+    public void addExpense(double expense, String type) {
+        totalExpenses += expense;
+        addTransaction(type + ": $" + expense);
+    }
+
+    public double getSavings() {
+        return savings;
+    }
+
+    private void saveTransactions() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+            for (String transaction : transactions) {
+                writer.write(transaction);
+                writer.newLine();
             }
+        } catch (IOException e) {
+            System.out.println("Error saving transactions: " + e.getMessage());
         }
     }
 
-    public void generateReport() {
-        System.out.println("\n--- Transaction Report ---");
-        for (String transaction : transactions) {
-            System.out.println(transaction); // Stacked formatting
-        }
+    private void loadTransactions() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                transactions.add(line);
 
-        // Advisory Notes
-        if (totalExpenses > income) {
-            System.out.println("\nAdvisory: You should save a little more this upcoming week.");
-        } else if (income > totalExpenses) {
-            System.out.println("\nAdvisory: You are very productive this week!");
+                // Parse income and expenses for totals
+                if (line.startsWith("Income:")) {
+                    income += Double.parseDouble(line.split("\\$")[1]);
+                } else if (line.startsWith("Savings:")) {
+                    savings += Double.parseDouble(line.split("\\$")[1]);
+                } else if (line.contains(": $")) {
+                    totalExpenses += Double.parseDouble(line.split("\\$")[1]);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("No existing transaction file found. Starting fresh.");
+        } catch (IOException e) {
+            System.out.println("Error loading transactions: " + e.getMessage());
         }
-
-        System.out.println("\n--- End of Report ---");
     }
 }
+
+
