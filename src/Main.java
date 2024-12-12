@@ -7,7 +7,8 @@ keeps your data and you have a login that is compatiable
 for testing you can use the admin and password for username and password
 */
 
-public class Main {
+public class Main
+{
     public static void main(String[] args) {
         LoginForm loginForm = new LoginForm(); // Use the no-argument constructor
         loginForm.show();
